@@ -2,9 +2,9 @@
 #include "util/delay.h"
 #include "avr/interrupt.h"
 #include "time.h"
+#include "compat/ina90.h"
 
-#define BLINK_DELAY_MS 250
-#define F_CPU 8000000UL
+#define F_CPU 1000000UL
 
 #define PB0_MASK 0b00000001
 #define PB1_MASK 0b00000010
@@ -16,17 +16,28 @@ void flip_output(int bit_to_flip) {
     PORTB ^= PB3_MASK;
 }
 
-ISR(TIMER1_OVF_vect) {
+int main_task() {
     flip_output(PB3_MASK);
+    return 0;
+}
+
+ISR(TIMER1_OVF_vect) {
+    // Timer Interrupt called subroutine
+    int result = main_task();
 }
 
 void system_init() {
+    // Set Pin 2 as output, all others as input
     DDRB = PB3_MASK;
 
-    TCCR1 = 0b00001001;
-    OCR1A = 50;
-    TIMSK = 0b00000100;
+    // Prescale 1MHz with 1024
+    TCCR1 = 0b00001101;
+    // Set compare register to 256/250 to get roughly 1 second interrupt
+    OCR1A = 250;
+    // Enable Timer/Counter1 related interrupts
+    TIMSK = 0b01100100;
 
+    // Enable Global interrupts
     sei();
 }
 
@@ -36,7 +47,8 @@ int main (void)
     system_init();
  
     while(1) {
-        // Do other task
+        _SLEEP();
     }
+
     return 0;
 }
