@@ -4,8 +4,6 @@
 #include "time.h"
 #include "compat/ina90.h"
 
-#define F_CPU 1000000UL
-
 #define PB0_MASK 0b00000001
 #define PB1_MASK 0b00000010
 #define PB2_MASK 0b00000100
@@ -21,9 +19,16 @@ int main_task() {
     return 0;
 }
 
-ISR(TIMER1_OVF_vect) {
-    // Timer Interrupt called subroutine
-    int result = main_task();
+volatile uint16_t ms_count = 0;
+ISR(TIMER1_COMPA_vect) {
+    if (ms_count > 250) {
+        ms_count = 0;
+        // Timer Interrupt called subroutine
+        main_task();
+    }
+    else {
+        ms_count++;
+    }
 }
 
 void system_init() {
@@ -31,11 +36,11 @@ void system_init() {
     DDRB = PB3_MASK;
 
     // Prescale 1MHz with 1024
-    TCCR1 = 0b00001101;
+    TCCR1 = 0b10001011;
     // Set compare register to 256/250 to get roughly 1 second interrupt
-    OCR1A = 250;
+    OCR1A = 100;
     // Enable Timer/Counter1 related interrupts
-    TIMSK = 0b01100100;
+    TIMSK = 0b01000000;
 
     // Enable Global interrupts
     sei();

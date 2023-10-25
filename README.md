@@ -51,6 +51,10 @@ For now I will just do it as follows:
 3. `cd` to `projects` and to `build`
 4. Run:
     ```bash
+    .\build_flash.bat
+    ```
+    OR
+    ```bash
     avr-gcc -mmcu=attiny85 -o blinker.elf ../blinker.c
     avr-objcopy -j .text -j .data -O ihex blinker.elf blinker.hex
     avrdude -C C:/Users/< USERNAME >/AvrDude/bin/avrdude.conf -v -p attiny85 -c stk500v1 -P COM3 -b 19200 -U flash:w:blinker.hex:i
